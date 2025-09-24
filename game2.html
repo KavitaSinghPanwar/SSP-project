@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rock Paper Scissors - Best of 3</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      margin: 20px;
+      font-size: 3rem;
+      color: #fff;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+    }
+
+    .game {
+      margin-top: 50px;
+    }
+
+    .choices {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 30px 0;
+    }
+
+    .choice {
+      font-size: 3rem;
+      padding: 20px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border-radius: 15px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .choice:hover {
+      transform: scale(1.2);
+      box-shadow: 0px 0px 15px rgba(0,0,0,0.3);
+    }
+
+    .result, .score {
+      font-size: 1.5rem;
+      margin: 20px;
+      color: #fff;
+    }
+
+    .arena {
+      margin: 30px auto;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      width: 80%;
+      max-width: 600px;
+      padding: 20px;
+      border-radius: 15px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .player, .computer {
+      font-size: 4rem;
+      min-width: 100px;
+      min-height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.3);
+      border-radius: 15px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+      transition: transform 0.4s ease-in-out;
+    }
+
+    .winner {
+      animation: bounce 0.5s infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: scale(1); }
+      to { transform: scale(1.2); }
+    }
+
+    .final {
+      font-size: 2rem;
+      margin-top: 30px;
+      color: yellow;
+      font-weight: bold;
+      text-shadow: 2px 2px 6px black;
+    }
+
+    .replay {
+      display: none;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      border: none;
+      border-radius: 10px;
+      background: #ff6f61;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .replay:hover {
+      transform: scale(1.1);
+      background: #ff3d2e;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Rock Paper Scissors 🎮</h1>
+  <div class="game">
+    <div class="score">Suru: 0 | You: 0</div>
+    <div class="arena">
+      <div class="player">❔</div>
+      <div class="vs">⚡</div>
+      <div class="computer">❔</div>
+    </div>
+    <div class="choices">
+      <div class="choice" data-choice="rock">✊ Rock</div>
+      <div class="choice" data-choice="paper">✋ Paper</div>
+      <div class="choice" data-choice="scissors">✌ Scissors</div>
+    </div>
+    <div class="result">Make your move!</div>
+    <div class="final"></div>
+    <button class="replay">🔄 Replay</button>
+  </div>
+
+  <!-- Sound effects -->
+  <audio id="clickSound" src="https://www.fesliyanstudios.com/play-mp3/387"></audio>
+  <audio id="winSound" src="https://www.fesliyanstudios.com/play-mp3/4387"></audio>
+  <audio id="loseSound" src="https://www.fesliyanstudios.com/play-mp3/6688"></audio>
+  <audio id="drawSound" src="https://www.fesliyanstudios.com/play-mp3/397"></audio>
+
+  <script>
+    const choices = document.querySelectorAll('.choice');
+    const playerDiv = document.querySelector('.player');
+    const computerDiv = document.querySelector('.computer');
+    const resultDiv = document.querySelector('.result');
+    const scoreDiv = document.querySelector('.score');
+    const finalDiv = document.querySelector('.final');
+    const replayBtn = document.querySelector('.replay');
+    const clickSound = document.getElementById("clickSound");
+    const winSound = document.getElementById("winSound");
+    const loseSound = document.getElementById("loseSound");
+    const drawSound = document.getElementById("drawSound");
+
+    let playerScore = 0;
+    let computerScore = 0;
+    const winTarget = 3;
+    const options = ["rock", "paper", "scissors"];
+    const emojis = { rock: "✊", paper: "✋", scissors: "✌" };
+
+    choices.forEach(choice => {
+      choice.addEventListener("click", () => {
+        if(playerScore >= winTarget || computerScore >= winTarget) return;
+
+        clickSound.play();
+
+        const playerChoice = choice.dataset.choice;
+        const computerChoice = options[Math.floor(Math.random() * 3)];
+
+        // Animate picks
+        playerDiv.textContent = "🤔";
+        computerDiv.textContent = "🤔";
+
+        setTimeout(() => {
+          playerDiv.textContent = emojis[playerChoice];
+          computerDiv.textContent = emojis[computerChoice];
+
+          if (playerChoice === computerChoice) {
+            resultDiv.textContent = "😅 It's a draw!";
+            drawSound.play();
+          } else if (
+            (playerChoice === "rock" && computerChoice === "scissors") ||
+            (playerChoice === "paper" && computerChoice === "rock") ||
+            (playerChoice === "scissors" && computerChoice === "paper")
+          ) {
+            resultDiv.textContent = "🔥 You score!";
+            playerScore++;
+            playerDiv.classList.add("winner");
+            winSound.play();
+            setTimeout(()=> playerDiv.classList.remove("winner"), 1000);
+          } else {
+            resultDiv.textContent = "💥 Suru scores!";
+            computerScore++;
+            computerDiv.classList.add("winner");
+            loseSound.play();
+            setTimeout(()=> computerDiv.classList.remove("winner"), 1000);
+          }
+
+          scoreDiv.textContent = `Suru: ${computerScore} | You: ${playerScore}`;
+
+          if(playerScore === winTarget || computerScore === winTarget){
+            finalDiv.textContent = playerScore > computerScore ? "🏆 You win the match!" : "👑 Suru wins the match!";
+            confettiCelebration();
+            replayBtn.style.display = "inline-block";
+          }
+        }, 1000);
+      });
+    });
+
+    // Replay button resets everything
+    replayBtn.addEventListener("click", () => {
+      playerScore = 0;
+      computerScore = 0;
+      scoreDiv.textContent = "Suru: 0 | You: 0";
+      resultDiv.textContent = "Make your move!";
+      finalDiv.textContent = "";
+      playerDiv.textContent = "❔";
+      computerDiv.textContent = "❔";
+      replayBtn.style.display = "none";
+    });
+
+    // Confetti effect
+    function confettiCelebration(){
+      for(let i=0; i<100; i++){
+        const conf = document.createElement("div");
+        conf.innerHTML = "🎉";
+        conf.style.position = "fixed";
+        conf.style.left = Math.random() * window.innerWidth + "px";
+        conf.style.top = "-20px";
+        conf.style.fontSize = Math.random()*20+20+"px";
+        conf.style.animation = `fall ${Math.random()*3+2}s linear`;
+        document.body.appendChild(conf);
+        setTimeout(()=> conf.remove(), 4000);
+      }
+    }
+
+    const style = document.createElement("style");
+    style.innerHTML = `
+      @keyframes fall {
+        to { transform: translateY(110vh) rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  </script>
+</body>
+</html>

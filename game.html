@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tic Tac Toe vs Suru</title>
+  <style>
+    body {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  background: linear-gradient(135deg, #a1c4fd, #c2e9fb); /* Light blue gradient */
+  color: #fff;
+}
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 2.5em;
+      color: #333;
+      animation: pop 1s infinite alternate;
+    }
+
+    @keyframes pop {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    #status {
+      margin: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-template-rows: repeat(3, 100px);
+      gap: 5px;
+    }
+
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: #fff;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .cell:hover {
+      background: #ffeaa7;
+      transform: scale(1.05);
+    }
+
+    .taken {
+      cursor: not-allowed;
+      color: #2d3436;
+    }
+
+    .winner {
+      background: #55efc4 !important;
+      animation: glow 1s infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 0 5px #00cec9; }
+      to { box-shadow: 0 0 20px #00cec9; }
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      background: #6c5ce7;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #341f97;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Tic Tac Toe vs Suru 🤖</h1>
+  <div id="status">Your turn! Place an X.</div>
+  <div class="board" id="board"></div>
+  <button onclick="resetGame()">Restart</button>
+
+  <script>
+    const boardEl = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    let board, gameOver;
+
+    function init() {
+      board = Array(9).fill("");
+      gameOver = false;
+      boardEl.innerHTML = "";
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.addEventListener("click", () => playerMove(i, cell));
+        boardEl.appendChild(cell);
+      }
+    }
+
+    function playerMove(i, cell) {
+      if (gameOver || board[i] !== "") return;
+      board[i] = "X";
+      cell.textContent = "X";
+      cell.classList.add("taken");
+      if (checkWin("X")) return endGame("You win! 🎉");
+      if (board.every(c => c !== "")) return endGame("It's a draw! 🤝");
+      statusEl.textContent = "Suru is thinking… 🤔";
+      setTimeout(suruMove, 800);
+    }
+
+    function suruMove() {
+      if (gameOver) return;
+      let move = bestMove();
+      board[move] = "O";
+      const cell = boardEl.children[move];
+      cell.textContent = "O";
+      cell.classList.add("taken");
+      if (checkWin("O")) return endGame("Suru wins! 🤖✨");
+      if (board.every(c => c !== "")) return endGame("It's a draw! 🤝");
+      statusEl.textContent = "Your turn! Place an X.";
+    }
+
+    function bestMove() {
+      // Try to win
+      for (let i = 0; i < 9; i++) {
+        if (board[i] === "") {
+          board[i] = "O";
+          if (checkWin("O", false)) { board[i] = ""; return i; }
+          board[i] = "";
+        }
+      }
+      // Block player
+      for (let i = 0; i < 9; i++) {
+        if (board[i] === "") {
+          board[i] = "X";
+          if (checkWin("X", false)) { board[i] = ""; return i; }
+          board[i] = "";
+        }
+      }
+      // Else random
+      let empty = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+      return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    function checkWin(player, highlight = true) {
+      const wins = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (let combo of wins) {
+        if (combo.every(i => board[i] === player)) {
+          if (highlight) {
+            combo.forEach(i => boardEl.children[i].classList.add("winner"));
+          }
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function endGame(message) {
+      statusEl.textContent = message;
+      gameOver = true;
+    }
+
+    function resetGame() {
+      init();
+      statusEl.textContent = "Your turn! Place an X.";
+    }
+
+    init();
+  </script>
+</body>
+</html>

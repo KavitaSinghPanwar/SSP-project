@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wishes Wall</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#ecf0f5;
+      --card:#486db6;
+      --muted:#9aa4b2;
+      --accent:#ffd166;
+      --white:#f8fafc;
+      --radius:14px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:Poppins,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      color:var(--white);
+      background:linear-gradient(180deg,#3e5aa2 0%, #163850 60%);
+      -webkit-font-smoothing:antialiased;
+      display:flex;
+      flex-direction:column;
+    }
+    a{color:inherit;text-decoration:none}
+
+    header{
+      padding:20px;
+      text-align:center;
+      font-weight:700;
+      font-size:22px;
+      color:var(--accent)
+    }
+
+    section{
+      flex:1;
+      padding:20px;
+      max-width:1100px;
+      margin:0 auto;
+      width:100%;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .wishes-wrap{
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:20px;
+      flex:1;
+    }
+    .wish-list{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      padding:18px;
+      border-radius:12px;
+      min-height:300px;
+      max-height:70vh;
+      overflow-y:auto;
+    }
+    .wish{
+      padding:12px;
+      border-radius:10px;
+      margin-bottom:10px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.03),transparent)
+    }
+    .wish h5{margin:0 0 6px;color:var(--accent)}
+    .wish p{margin:0;color:var(--muted)}
+
+    form{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:16px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:12px;
+      height:fit-content;
+    }
+    input,textarea{
+      padding:10px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:transparent;
+      color:var(--white);
+      font-size:16px;
+    }
+    textarea{min-height:120px}
+    button{
+      background:linear-gradient(90deg,var(--accent),#ffb85c);
+      color:#07141d;
+      border:none;
+      font-weight:700;
+      padding:12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:16px;
+    }
+    button:hover{opacity:.9}
+
+    footer{
+      text-align:center;
+      color:var(--muted);
+      padding:16px;
+      font-size:14px
+    }
+
+    /* Responsive adjustments */
+    @media(max-width:900px){
+      .wishes-wrap{grid-template-columns:1fr}
+      .wish-list{max-height:50vh}
+    }
+    @media(max-width:500px){
+      header{font-size:18px}
+      input,textarea,button{font-size:14px}
+      .wish h5{font-size:15px}
+      .wish p{font-size:13px}
+    }
+    .wish-controls { display:flex; justify-content:flex-end; margin-bottom:8px; }
+    .clear-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.06);
+    color: var(--muted);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    }
+    .clear-btn:hover { background: rgba(255,255,255,0.02); color: var(--white); }
+    .delete-btn {
+    background: transparent;
+    border: none;
+    color: #ff6b6b;
+    font-size: 14px;
+    margin-left: 8px;
+    cursor: pointer;
+    }
+    .delete-btn:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+  <header>✨ Wishes Wall ✨</header>
+
+  <section>
+    <div class="wishes-wrap">
+        <div class="wish-list" id="wishList">
+        <div class="wish-controls" style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+        <button id="clearAllBtn" class="clear-btn" type="button">Clear All</button>
+        </div>
+        <div id="wishItems"><!-- wishes will be inserted here --></div>
+    </div>
+
+      <form id="wishForm">
+        <input id="nameInput" type="text" placeholder="Your name" required />
+        <textarea id="msgInput" placeholder="Write a short wish..." required></textarea>
+        <button type="submit">Send Wish</button>
+      </form>
+    </div>
+  </section>
+
+  <footer>Made with ❤️ by Kv</footer>
+
+  <script>
+  const PREFILLED_WISHES = [
+    {name:'Sister', msg:'Happy Birthday! Keep shining.'},
+    {name:'Mom', msg:'We love you — always proud.'}
+  ];
+
+  // Elements
+  const wishListEl = document.getElementById('wishList'); // wrapper (not cleared)
+  const wishItemsEl = document.getElementById('wishItems'); // where items render
+  const clearAllBtn = document.getElementById('clearAllBtn');
+  const wishForm = document.getElementById('wishForm');
+
+  // Storage helpers
+  const saveWishes = (wishes) => localStorage.setItem('wishes', JSON.stringify(wishes));
+  const loadWishes = () => JSON.parse(localStorage.getItem('wishes') || 'null') || PREFILLED_WISHES.slice();
+
+  // Render function — shows newest first and attaches delete handlers
+  function renderWishes() {
+    const wishes = loadWishes();
+    wishItemsEl.innerHTML = '';
+
+    if (!wishes || wishes.length === 0) {
+      wishItemsEl.innerHTML = '<div style="color:var(--muted);padding:12px">No wishes yet — be the first to send one!</div>';
+      return;
+    }
+
+    // Show newest first: reverse copy so original index mapping still corresponds to storage array
+    wishes.slice().reverse().forEach((w, idx) => {
+      const realIndex = wishes.length - 1 - idx; // index in original array
+      const el = document.createElement('div');
+      el.className = 'wish';
+      // layout: left = name/msg, right = delete btn
+      el.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="flex:1">
+            <h5>${escapeHtml(w.name)}</h5>
+            <p>${escapeHtml(w.msg)}</p>
+          </div>
+          <div style="flex:0">
+            <button class="delete-btn" type="button" data-index="${realIndex}" aria-label="Remove wish">❌</button>
+          </div>
+        </div>
+      `;
+      wishItemsEl.appendChild(el);
+    });
+
+    // Attach click listeners to newly created delete buttons
+    wishItemsEl.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.index);
+        deleteWish(idx);
+      });
+    });
+  }
+
+  // Delete one wish by array index (same index as in stored array)
+  function deleteWish(index) {
+    const wishes = loadWishes();
+    if (index < 0 || index >= wishes.length) return;
+    if (!confirm('Remove this wish?')) return;
+    wishes.splice(index, 1);
+    saveWishes(wishes);
+    renderWishes();
+  }
+
+  // Clear all wishes
+  clearAllBtn.addEventListener('click', () => {
+    if (!confirm('Clear ALL wishes? This cannot be undone.')) return;
+    saveWishes([]);
+    renderWishes();
+  });
+
+  // Form submission: add new wish and re-render
+  wishForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('nameInput').value.trim();
+    const msg = document.getElementById('msgInput').value.trim();
+    if (!name || !msg) return;
+    const wishes = loadWishes();
+    wishes.push({ name, msg }); // adds to end so newest is shown on top by render
+    saveWishes(wishes);
+    renderWishes();
+    e.target.reset();
+    alert('Wish added — thank you!');
+  });
+
+  // HTML escape helper
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"]+/g, (s) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[s]));
+  }
+
+  // initial render
+  renderWishes();
+</script>
+
+</body>
+</html>
