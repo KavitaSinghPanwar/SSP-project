@@ -115,7 +115,7 @@
 <body>
   <h1>🎮 Rock Paper Scissors 🎮</h1>
   <div class="game">
-    <div class="score">Suru: 0 | You: 0</div>
+    <div class="score">You: 0 | Suru: 0</div>
     <div class="arena">
       <div class="player">❔</div>
       <div class="vs">⚡</div>
@@ -194,7 +194,7 @@
             setTimeout(()=> computerDiv.classList.remove("winner"), 1000);
           }
 
-          scoreDiv.textContent = `Suru: ${computerScore} | You: ${playerScore}`;
+          scoreDiv.textContent = `You: ${playerScore} | Suru: ${computerScore}`;
 
           if(playerScore === winTarget || computerScore === winTarget){
             finalDiv.textContent = playerScore > computerScore ? "🏆 You win the match!" : "👑 Suru wins the match!";
