@@ -12,7 +12,7 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      background: linear-gradient(270deg, #ff9a9e, #fad0c4, #fad0c4, #fbc2eb, #a18cd1);
+      background: linear-gradient(270deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1);
       background-size: 1000% 1000%;
       animation: gradientBG 20s ease infinite;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -46,9 +46,9 @@
     }
 
     .footer {
-      margin-top: 20px;
+      margin-top: 10px;
       font-size: 1rem;
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
     button {
@@ -66,95 +66,161 @@
     button:hover {
       background: #341f97;
     }
+
+    #score {
+      margin-top: 10px;
+      font-size: 1.2rem;
+    }
+
+    /* Arrow Controls */
+    .controls {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: 60px 60px 60px;
+      grid-template-rows: 60px 60px;
+      gap: 10px;
+      justify-content: center;
+    }
+    .controls button {
+      width: 60px;
+      height: 60px;
+      font-size: 1.5em;
+      border-radius: 50%;
+      background: #ff6b6b;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.4);
+    }
+    .controls button:active {
+      background: #ff4757;
+    }
+    .up { grid-column: 2; grid-row: 1; }
+    .left { grid-column: 1; grid-row: 2; }
+    .down { grid-column: 2; grid-row: 2; }
+    .right { grid-column: 3; grid-row: 2; }
   </style>
 </head>
 <body>
   <div class="header-text">Welcome to the Ultimate Snake Challenge! 🐍</div>
   <canvas id="gameCanvas" width="400" height="400"></canvas>
-  <div class="footer">Use Arrow Keys to Move 🐍 | Collect Food & Beat Your High Score!</div>
+  <div id="score">Score: 0</div>
+  <div class="footer">Use Arrow Keys or Buttons to Move 🐍</div>
   <button id="restartBtn">Restart Game</button>
+
+  <!-- Arrow Controls -->
+  <div class="controls">
+    <button class="up">⬆️</button>
+    <button class="left">⬅️</button>
+    <button class="down">⬇️</button>
+    <button class="right">➡️</button>
+  </div>
 
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
     const restartBtn = document.getElementById("restartBtn");
+    const scoreEl = document.getElementById("score");
+
     const box = 20;
-    let snake, food, score, d, game;
+    let snake, food, score, direction, game;
 
     function init() {
-      snake = [];
-      snake[0] = { x: 9 * box, y: 10 * box };
+      snake = [{x: 9 * box, y: 10 * box}];
       food = {
-        x: Math.floor(Math.random() * 19 + 1) * box,
-        y: Math.floor(Math.random() * 19 + 1) * box
+        x: Math.floor(Math.random() * (canvas.width/box)) * box,
+        y: Math.floor(Math.random() * (canvas.height/box)) * box
       };
       score = 0;
-      d = undefined;
+      direction = undefined;
+      scoreEl.textContent = "Score: 0";
       clearInterval(game);
-      game = setInterval(draw, 150);
+      game = setInterval(draw, 120);
     }
 
-    document.addEventListener("keydown", direction);
-
-    function direction(event) {
-      if(event.keyCode == 37 && d != "RIGHT") d = "LEFT";
-      else if(event.keyCode == 38 && d != "DOWN") d = "UP";
-      else if(event.keyCode == 39 && d != "LEFT") d = "RIGHT";
-      else if(event.keyCode == 40 && d != "UP") d = "DOWN";
+    function changeDirection(dir) {
+      if (dir === "LEFT" && direction !== "RIGHT") direction = "LEFT";
+      else if (dir === "UP" && direction !== "DOWN") direction = "UP";
+      else if (dir === "RIGHT" && direction !== "LEFT") direction = "RIGHT";
+      else if (dir === "DOWN" && direction !== "UP") direction = "DOWN";
     }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft") changeDirection("LEFT");
+      else if (e.key === "ArrowUp") changeDirection("UP");
+      else if (e.key === "ArrowRight") changeDirection("RIGHT");
+      else if (e.key === "ArrowDown") changeDirection("DOWN");
+    });
+
+    document.querySelector(".up").onclick = () => changeDirection("UP");
+    document.querySelector(".left").onclick = () => changeDirection("LEFT");
+    document.querySelector(".down").onclick = () => changeDirection("DOWN");
+    document.querySelector(".right").onclick = () => changeDirection("RIGHT");
 
     function draw() {
-      ctx.clearRect(0, 0, 400, 400);
-      for(let i = 0; i < snake.length; i++) {
-        ctx.fillStyle = i == 0 ? "#ffeb3b" : "#4caf50";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw snake
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = (i === 0) ? "#ffeb3b" : "#4caf50";
         ctx.fillRect(snake[i].x, snake[i].y, box, box);
         ctx.strokeStyle = "#222";
         ctx.strokeRect(snake[i].x, snake[i].y, box, box);
       }
 
+      // Draw food
       ctx.fillStyle = "#e91e63";
       ctx.beginPath();
       ctx.arc(food.x + box/2, food.y + box/2, box/2 - 2, 0, Math.PI*2);
       ctx.fill();
 
+      // Snake head position
       let snakeX = snake[0].x;
       let snakeY = snake[0].y;
 
-      if(d == "LEFT") snakeX -= box;
-      if(d == "UP") snakeY -= box;
-      if(d == "RIGHT") snakeX += box;
-      if(d == "DOWN") snakeY += box;
+      if (direction === "LEFT") snakeX -= box;
+      if (direction === "UP") snakeY -= box;
+      if (direction === "RIGHT") snakeX += box;
+      if (direction === "DOWN") snakeY += box;
 
-      if(snakeX == food.x && snakeY == food.y) {
+      // Eat food
+      if (snakeX === food.x && snakeY === food.y) {
         score++;
+        scoreEl.textContent = "Score: " + score;
         food = {
-          x: Math.floor(Math.random() * 19 + 1) * box,
-          y: Math.floor(Math.random() * 19 + 1) * box
+          x: Math.floor(Math.random() * (canvas.width/box)) * box,
+          y: Math.floor(Math.random() * (canvas.height/box)) * box
         };
       } else {
         snake.pop();
       }
 
-      let newHead = { x: snakeX, y: snakeY };
+      let newHead = {x: snakeX, y: snakeY};
 
-      if(snakeX < 0 || snakeY < 0 || snakeX >= 20*box || snakeY >= 20*box || collision(newHead, snake)) {
-        clearInterval(game);
-        alert("Game Over! Your Score: " + score);
-      }
+      // Game over conditions
+      
+      if (
+  snakeX < 0 || snakeY < 0 ||
+  snakeX >= canvas.width || snakeY >= canvas.height ||
+  (snake.length > 1 && collision(newHead, snake))
+) {
+  clearInterval(game);
+  alert("Game Over! Your Score: " + score);
+}
+
 
       snake.unshift(newHead);
-
-      ctx.fillStyle = "white";
-      ctx.font = "20px Arial";
-      ctx.fillText("Score: " + score, box, box);
     }
 
     function collision(head, array) {
-      for(let i = 0; i < array.length; i++) {
-        if(head.x == array[i].x && head.y == array[i].y) return true;
-      }
-      return false;
+  // skip index 0 (the head itself)
+  for (let i = 1; i < array.length; i++) {
+    if (head.x === array[i].x && head.y === array[i].y) {
+      return true;
     }
+  }
+  return false;
+}
+
 
     restartBtn.addEventListener('click', init);
 
